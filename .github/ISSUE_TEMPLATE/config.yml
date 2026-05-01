@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 Ask a question / discuss
+    url: https://github.com/Plumr-org/sdks/discussions
+    about: For usage questions, design discussions, and "is this possible?" — please use Discussions instead of Issues.
+  - name: 🌐 Plumr docs
+    url: https://app.plumr.studio/docs
+    about: Plumr platform documentation (separate from SDK docs).

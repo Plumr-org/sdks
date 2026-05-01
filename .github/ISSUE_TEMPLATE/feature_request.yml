@@ -1,0 +1,22 @@
+name: ✨ Feature request
+description: Suggest a new feature or a new language.
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: feature
+    attributes:
+      label: What do you want?
+      description: One paragraph is plenty.
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why?
+      description: What does this unlock for you?
+  - type: textarea
+    id: ideas
+    attributes:
+      label: Sketch (optional)
+      description: An API shape you'd like to see, if you have one in mind.
+      render: typescript

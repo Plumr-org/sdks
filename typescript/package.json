@@ -1,0 +1,54 @@
+{
+  "name": "@plumr/sdk",
+  "version": "0.1.0",
+  "description": "Official TypeScript / Node.js SDK for the Plumr API.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsup src/index.ts --format esm,cjs --dts --clean",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "plumr",
+    "ai",
+    "agents",
+    "llm",
+    "sdk"
+  ],
+  "homepage": "https://github.com/Plumr-org/sdks/tree/main/typescript",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Plumr-org/sdks.git",
+    "directory": "typescript"
+  },
+  "bugs": {
+    "url": "https://github.com/Plumr-org/sdks/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "tsup": "^8.3.0",
+    "typescript": "^5.6.0"
+  }
+}

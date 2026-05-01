@@ -1,0 +1,43 @@
+name: 🐛 Bug report
+description: Something in the SDK isn't working as expected.
+labels: ["bug"]
+body:
+  - type: dropdown
+    id: language
+    attributes:
+      label: Language
+      options:
+        - TypeScript / JavaScript
+        - Python
+        - Go (planned)
+        - Other / docs
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: SDK version
+      placeholder: "@plumr/sdk 0.1.0 / plumr 0.1.0"
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A short description, plus the actual vs. expected behaviour.
+      placeholder: |
+        I called `plumr.runOnce(...)` and got X, but expected Y.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal reproduction
+      description: A snippet someone else can run.
+      render: typescript
+  - type: textarea
+    id: env
+    attributes:
+      label: Environment
+      placeholder: |
+        Node 22.5 / Python 3.12, macOS 14, deployed Plumr at app.plumr.studio

@@ -1,0 +1,64 @@
+[build-system]
+requires = ["hatchling>=1.21"]
+build-backend = "hatchling.build"
+
+[project]
+name = "plumr"
+version = "0.1.0"
+description = "Official Python SDK for the Plumr API."
+readme = "README.md"
+requires-python = ">=3.9"
+license = "MIT"
+authors = [{ name = "Plumr", email = "hello@plumr.studio" }]
+keywords = ["plumr", "ai", "agents", "llm", "sdk"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries",
+]
+dependencies = [
+    "httpx>=0.24",
+]
+
+[project.urls]
+Homepage = "https://plumr.studio"
+Documentation = "https://github.com/Plumr-org/sdks/tree/main/python"
+Repository = "https://github.com/Plumr-org/sdks"
+Issues = "https://github.com/Plumr-org/sdks/issues"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7",
+    "ruff>=0.6",
+    "mypy>=1.10",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["plumr"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "plumr",
+    "README.md",
+    "LICENSE",
+]
+
+[tool.ruff]
+target-version = "py39"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+
+[tool.mypy]
+python_version = "3.9"
+strict = true
+warn_unused_ignores = true

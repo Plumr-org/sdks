@@ -1,0 +1,28 @@
+# Editors
+.DS_Store
+.idea/
+.vscode/
+
+# Node
+node_modules/
+dist/
+*.tgz
+.npm/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.eggs/
+*.egg-info/
+.venv/
+.tox/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+build/
+dist/
+
+# Local env
+.env
+.env.local

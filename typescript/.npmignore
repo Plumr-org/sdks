@@ -1,0 +1,7 @@
+# Ignore everything in the SDK dir except what we want shipped.
+src
+examples
+tsconfig.json
+.npmignore
+node_modules
+*.tsbuildinfo
