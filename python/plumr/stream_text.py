@@ -26,6 +26,9 @@ class StreamTextResult:
     error: Optional[str]
     durationMs: int
     conversationId: Optional[str] = None
+    totalCostUsd: Optional[float] = None
+    totalPromptTokens: Optional[int] = None
+    totalCompletionTokens: Optional[int] = None
     toolCalls: List[ToolCallEvent] = field(default_factory=list)
     errors: List[ErrorEvent] = field(default_factory=list)
 
@@ -102,6 +105,9 @@ def stream_text(
         error=end.error,
         durationMs=end.durationMs,
         conversationId=end.conversationId,
+        totalCostUsd=end.totalCostUsd,
+        totalPromptTokens=end.totalPromptTokens,
+        totalCompletionTokens=end.totalCompletionTokens,
         toolCalls=tool_calls,
         errors=errors,
     )
@@ -174,6 +180,9 @@ async def astream_text(
         error=end.error,
         durationMs=end.durationMs,
         conversationId=end.conversationId,
+        totalCostUsd=end.totalCostUsd,
+        totalPromptTokens=end.totalPromptTokens,
+        totalCompletionTokens=end.totalCompletionTokens,
         toolCalls=tool_calls,
         errors=errors,
     )

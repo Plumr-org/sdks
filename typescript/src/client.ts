@@ -92,6 +92,9 @@ export class Plumr {
           error: event.error,
           durationMs: event.durationMs,
           conversationId: event.conversationId,
+          totalCostUsd: event.totalCostUsd,
+          totalPromptTokens: event.totalPromptTokens,
+          totalCompletionTokens: event.totalCompletionTokens,
         };
       }
     }

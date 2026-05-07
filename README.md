@@ -16,6 +16,12 @@ matches the language you already write.
 | **C# / .NET**  | 🔜 Planned | `Plumr.Sdk`                           | _coming soon_                                |
 | **Curl**       | 📄 Docs    | —                                    | [examples →](#raw-http)                      |
 
+### Hosting tools
+
+| Package                        | What                                              | Install                              |
+| ------------------------------ | ------------------------------------------------- | ------------------------------------ |
+| [`@plumr/tool-server`](./typescript-tool-server) | Express + framework-free helper for hosting Plumr external (HTTP) tool nodes — verifies the HMAC signature, dispatches to a handler map. | `npm install @plumr/tool-server`     |
+
 Want a language we haven't shipped? Open an
 [issue](https://github.com/Plumr-org/sdks/issues/new/choose) or
 [discussion](https://github.com/Plumr-org/sdks/discussions).

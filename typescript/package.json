@@ -1,6 +1,6 @@
 {
   "name": "@plumr/sdk",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Official TypeScript / Node.js SDK for the Plumr API.",
   "license": "MIT",
   "type": "module",

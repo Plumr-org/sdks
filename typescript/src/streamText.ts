@@ -55,6 +55,10 @@ export interface StreamTextResult {
   error: string | null;
   durationMs: number;
   conversationId?: string;
+  /** USD cost estimate aggregated across LLM steps (null when unpriced). */
+  totalCostUsd?: number | null;
+  totalPromptTokens?: number | null;
+  totalCompletionTokens?: number | null;
   toolCalls: ToolCallEvent[];
   errors: ErrorEvent[];
 }
@@ -134,6 +138,9 @@ export async function streamText(
     error: end.error,
     durationMs: end.durationMs,
     conversationId: end.conversationId,
+    totalCostUsd: end.totalCostUsd,
+    totalPromptTokens: end.totalPromptTokens,
+    totalCompletionTokens: end.totalCompletionTokens,
     toolCalls,
     errors,
   };

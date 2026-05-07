@@ -138,6 +138,9 @@ class Plumr:
             error=last.error,
             durationMs=last.durationMs,
             conversationId=last.conversationId,
+            totalCostUsd=last.totalCostUsd,
+            totalPromptTokens=last.totalPromptTokens,
+            totalCompletionTokens=last.totalCompletionTokens,
         )
 
     def close(self) -> None:
@@ -226,6 +229,9 @@ class AsyncPlumr:
             error=last.error,
             durationMs=last.durationMs,
             conversationId=last.conversationId,
+            totalCostUsd=last.totalCostUsd,
+            totalPromptTokens=last.totalPromptTokens,
+            totalCompletionTokens=last.totalCompletionTokens,
         )
 
     async def aclose(self) -> None:

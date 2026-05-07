@@ -99,6 +99,7 @@ class LlmEndEvent:
     nodeId: str
     promptTokens: Optional[int]
     completionTokens: Optional[int]
+    costUsd: Optional[float] = None
 
 
 @dataclass
@@ -149,6 +150,9 @@ class RunEndEvent:
     error: Optional[str]
     durationMs: int
     conversationId: Optional[str] = None
+    totalCostUsd: Optional[float] = None
+    totalPromptTokens: Optional[int] = None
+    totalCompletionTokens: Optional[int] = None
 
 
 @dataclass
@@ -182,6 +186,9 @@ class RunOnceResult:
     error: Optional[str]
     durationMs: int
     conversationId: Optional[str] = None
+    totalCostUsd: Optional[float] = None
+    totalPromptTokens: Optional[int] = None
+    totalCompletionTokens: Optional[int] = None
 
 
 _EVENT_CLASSES = {

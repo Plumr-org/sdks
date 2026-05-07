@@ -54,6 +54,9 @@ export interface LlmEndEvent {
   nodeId: string;
   promptTokens: number | null;
   completionTokens: number | null;
+  /** USD cost estimate from Plumr's catalog price table. Null when the
+   *  model isn't priced or token counts are missing. */
+  costUsd?: number | null;
 }
 
 export interface ToolCallEvent {
@@ -106,6 +109,11 @@ export interface RunEndEvent {
   durationMs: number;
   /** Conversation id assigned by the server (echoed when one is in use). */
   conversationId?: string;
+  /** Sum of `LlmEndEvent.costUsd` across the run. Null when no model was priced. */
+  totalCostUsd?: number | null;
+  /** Aggregate token counts across all LLM steps. */
+  totalPromptTokens?: number | null;
+  totalCompletionTokens?: number | null;
 }
 
 /**
@@ -190,6 +198,9 @@ export interface RunOnceResult {
   error: string | null;
   durationMs: number;
   conversationId?: string;
+  totalCostUsd?: number | null;
+  totalPromptTokens?: number | null;
+  totalCompletionTokens?: number | null;
 }
 
 export interface PlumrClientOptions {
