@@ -23,8 +23,21 @@
 import type { Request, Response, NextFunction, RequestHandler } from "express";
 import {
   verifyAndDispatch,
+  ToolServerError,
+  type ToolHandler,
+  type ToolHandlerContext,
+  type ToolHandlers,
   type ToolServerOptions,
 } from "./index.js";
+
+// Re-export so consumers can `import { plumrTools, ToolServerError } from "@plumr/tool-server/express"`.
+export {
+  ToolServerError,
+  type ToolHandler,
+  type ToolHandlerContext,
+  type ToolHandlers,
+  type ToolServerOptions,
+};
 
 function readRawBody(req: Request): Promise<string> {
   return new Promise((resolve, reject) => {
