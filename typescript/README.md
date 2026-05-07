@@ -16,13 +16,31 @@ and `ReadableStream` exist.
 
 ## Usage
 
-### Streaming
+### `streamText` — AI-SDK-style ergonomics
+
+Easiest way in. Callbacks for the events you actually care about, plus a
+final aggregate result.
 
 ```ts
-import Plumr from "@plumr/sdk";
+import Plumr, { streamText } from "@plumr/sdk";
 
 const plumr = new Plumr({ apiKey: process.env.PLUMR_API_KEY! });
 
+const result = await streamText(plumr, {
+  input: "Write a haiku about Mars.",
+  onText: (chunk) => process.stdout.write(chunk),
+  onToolCall: ({ label }) => console.error(`→ ${label}`),
+  onError: (err) => console.error(err.code, err.message),
+});
+
+console.log("\n— done in", result.durationMs, "ms");
+```
+
+### Raw event stream
+
+Drop down to the underlying iterator when you need every event.
+
+```ts
 for await (const event of plumr.run({ input: "Write a haiku about Mars." })) {
   switch (event.type) {
     case "llm.delta":
@@ -47,6 +65,40 @@ const { output, durationMs } = await plumr.runOnce({
   input: "Write a haiku about Mars.",
 });
 console.log(output);
+```
+
+### Multimodal input (vision)
+
+```ts
+const result = await streamText(plumr, {
+  input: [
+    { type: "text", text: "What's in this picture?" },
+    { type: "image", url: "https://example.com/cat.jpg" },
+    // or inline:
+    // { type: "image", base64: "...", mediaType: "image/png" },
+  ],
+});
+```
+
+The orchestrator's model has to support vision (e.g. `gpt-4o`,
+`claude-sonnet-4-6`, `gemini-2.5-pro`).
+
+### Multi-turn conversations
+
+Pass a `conversationId` and the runtime persists the user/assistant turns
+to MongoDB. New runs against the same id resume the history.
+
+```ts
+const a = await plumr.runOnce({
+  input: "My name is Linas.",
+  conversationId: "conv-abc",
+});
+
+const b = await plumr.runOnce({
+  input: "What's my name?",
+  conversationId: "conv-abc",
+});
+// b.output references "Linas"
 ```
 
 ### Override plum settings per call
@@ -89,18 +141,36 @@ new Plumr({
 
 `run()` yields strongly-typed events:
 
-| Event         | Fields                                                 |
-| ------------- | ------------------------------------------------------ |
-| `run.start`   | `startedAt`                                            |
-| `step.start`  | `nodeId`, `nodeType`, `label`, `input`                 |
-| `step.end`    | `nodeId`, `output`, `durationMs`, `error`              |
-| `llm.start`   | `nodeId`, `provider`, `model`                          |
-| `llm.delta`   | `nodeId`, `text`                                       |
-| `llm.end`     | `nodeId`, `promptTokens`, `completionTokens`           |
-| `tool.call`   | `nodeId`, `label`, `note?`                             |
-| `run.end`     | `runId`, `status`, `output`, `error`, `durationMs`     |
+| Event              | Fields                                                  |
+| ------------------ | ------------------------------------------------------- |
+| `run.start`        | `startedAt`                                             |
+| `step.start`       | `nodeId`, `nodeType`, `label`, `input`                  |
+| `step.end`         | `nodeId`, `output`, `durationMs`, `error`               |
+| `llm.start`        | `nodeId`, `provider`, `model`                           |
+| `llm.delta`        | `nodeId`, `text`                                        |
+| `llm.end`          | `nodeId`, `promptTokens`, `completionTokens`            |
+| `tool.call`        | `nodeId`, `label`, `note?`                              |
+| `reasoning.delta`  | `nodeId`, `text` — visible chain-of-thought             |
+| `error`            | `code`, `retryable`, `message`, `nodeId?`               |
+| `run.end`          | `runId`, `status`, `output`, `error`, `durationMs`, `conversationId?` |
+| `run.cancelled`    | `runId`, `durationMs` — emitted when `signal` aborts    |
 
 Use the `PlumrEvent` union type for exhaustive `switch` checks.
+
+### Error codes
+
+`error` events carry a stable taxonomy:
+
+| Code                          | Meaning                                                |
+| ----------------------------- | ------------------------------------------------------ |
+| `provider_rate_limit`         | LLM provider returned 429 — `retryable: true`          |
+| `provider_timeout`            | LLM call timed out — `retryable: true`                 |
+| `provider_invalid_request`    | LLM provider rejected the request                       |
+| `tool_timeout`                | A tool exceeded its `timeoutMs` — `retryable: true`     |
+| `tool_invalid_output`         | Tool returned an unparseable response                   |
+| `quota_exceeded`              | Plan quota hit                                          |
+| `cancelled`                   | Run aborted by client                                   |
+| `internal`                    | Anything else                                           |
 
 ## Errors
 

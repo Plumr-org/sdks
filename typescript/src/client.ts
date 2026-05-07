@@ -33,7 +33,8 @@ export class Plumr {
 
   /**
    * Stream every event the deployed plum emits. Yields PlumrEvent objects
-   * until the run ends. The final `run.end` event is included.
+   * until the run ends. The final `run.end` (or `run.cancelled` / `error`)
+   * event is included.
    *
    * @example
    *   for await (const ev of plumr.run({ input: "hello" })) {
@@ -41,25 +42,35 @@ export class Plumr {
    *   }
    */
   async *run(opts: RunOptions): AsyncGenerator<PlumrEvent, void, void> {
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${this.apiKey}`,
+    };
+    if (opts.idempotencyKey) {
+      headers["Idempotency-Key"] = opts.idempotencyKey;
+    }
+
+    const body: Record<string, unknown> = {
+      input: opts.input,
+    };
+    if (opts.params !== undefined) body.params = opts.params;
+    if (opts.conversationId !== undefined) {
+      body.conversationId = opts.conversationId;
+    }
+
     const res = await this.fetchImpl(`${this.baseUrl}/api/v1/run`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${this.apiKey}`,
-      },
-      body: JSON.stringify({
-        input: opts.input,
-        params: opts.params,
-      }),
+      headers,
+      body: JSON.stringify(body),
       signal: opts.signal,
     });
 
     if (!res.ok || !res.body) {
-      const body = await res.text().catch(() => "");
+      const text = await res.text().catch(() => "");
       throw new PlumrError(
-        `Plumr ${res.status}: ${body.slice(0, 200) || res.statusText}`,
+        `Plumr ${res.status}: ${text.slice(0, 200) || res.statusText}`,
         res.status,
-        body,
+        text,
       );
     }
 
@@ -80,6 +91,7 @@ export class Plumr {
           output: event.output,
           error: event.error,
           durationMs: event.durationMs,
+          conversationId: event.conversationId,
         };
       }
     }

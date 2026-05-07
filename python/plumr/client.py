@@ -7,7 +7,13 @@ from typing import Any, AsyncIterator, Iterator, Mapping, Optional
 import httpx
 
 from ._stream import iter_sse_async, iter_sse_sync
-from .types import PlumrEvent, RunEndEvent, RunOnceResult
+from .types import (
+    PlumrEvent,
+    RunEndEvent,
+    RunInput,
+    RunOnceResult,
+    _serialise_input,
+)
 
 DEFAULT_BASE_URL = "https://app.plumr.studio"
 USER_AGENT = "plumr-python/0.1.0"
@@ -20,6 +26,33 @@ class PlumrError(Exception):
         super().__init__(message)
         self.status = status
         self.body = body
+
+
+def _build_body(
+    input: RunInput,
+    params: Optional[Mapping[str, Any]],
+    conversation_id: Optional[str],
+) -> dict[str, Any]:
+    body: dict[str, Any] = {"input": _serialise_input(input)}
+    if params:
+        body["params"] = dict(params)
+    if conversation_id is not None:
+        body["conversationId"] = conversation_id
+    return body
+
+
+def _build_headers(
+    api_key: str,
+    idempotency_key: Optional[str],
+) -> dict[str, str]:
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+        "User-Agent": USER_AGENT,
+    }
+    if idempotency_key:
+        headers["Idempotency-Key"] = idempotency_key
+    return headers
 
 
 # ── Sync ─────────────────────────────────────────────────────────── #
@@ -46,31 +79,32 @@ class Plumr:
         self.api_key = api_key
         self.base_url = base_url.rstrip("/")
         self._owns_client = client is None
-        self._client = client or httpx.Client(timeout=timeout, headers=self._default_headers())
-
-    def _default_headers(self) -> dict[str, str]:
-        return {
-            "Authorization": f"Bearer {self.api_key}",
-            "User-Agent": USER_AGENT,
-        }
+        self._client = client or httpx.Client(timeout=timeout)
 
     def run(
         self,
-        input: str,
+        input: RunInput,
         params: Optional[Mapping[str, Any]] = None,
+        conversation_id: Optional[str] = None,
+        idempotency_key: Optional[str] = None,
     ) -> Iterator[PlumrEvent]:
-        """Stream every event the deployed plum emits, until run.end."""
-        body: dict[str, Any] = {"input": input}
-        if params:
-            body["params"] = dict(params)
+        """Stream every event the deployed plum emits, until run.end.
 
+        Args:
+            input: A string, or a list of {text, image} parts for multimodal input.
+            params: Override fields on the deployed plum bound to public API params.
+            conversation_id: Multi-turn id; new turns persist into the same conversation.
+            idempotency_key: Replaying the same key replays the run instead of re-billing.
+        """
+        body = _build_body(input, params, conversation_id)
         with self._client.stream(
             "POST",
             f"{self.base_url}/api/v1/run",
             json=body,
-            headers={**self._default_headers(), "Content-Type": "application/json"},
+            headers=_build_headers(self.api_key, idempotency_key),
         ) as resp:
             if resp.status_code >= 400:
+                resp.read()  # populate resp.text
                 raise PlumrError(
                     f"Plumr {resp.status_code}: {resp.text[:200] or resp.reason_phrase}",
                     status=resp.status_code,
@@ -80,12 +114,19 @@ class Plumr:
 
     def run_once(
         self,
-        input: str,
+        input: RunInput,
         params: Optional[Mapping[str, Any]] = None,
+        conversation_id: Optional[str] = None,
+        idempotency_key: Optional[str] = None,
     ) -> RunOnceResult:
         """Run, drain the stream, return the final result."""
         last: Optional[RunEndEvent] = None
-        for event in self.run(input=input, params=params):
+        for event in self.run(
+            input=input,
+            params=params,
+            conversation_id=conversation_id,
+            idempotency_key=idempotency_key,
+        ):
             if isinstance(event, RunEndEvent):
                 last = event
         if last is None:
@@ -96,6 +137,7 @@ class Plumr:
             output=last.output,
             error=last.error,
             durationMs=last.durationMs,
+            conversationId=last.conversationId,
         )
 
     def close(self) -> None:
@@ -132,27 +174,21 @@ class AsyncPlumr:
         self.api_key = api_key
         self.base_url = base_url.rstrip("/")
         self._owns_client = client is None
-        self._client = client or httpx.AsyncClient(
-            timeout=timeout,
-            headers={
-                "Authorization": f"Bearer {api_key}",
-                "User-Agent": USER_AGENT,
-            },
-        )
+        self._client = client or httpx.AsyncClient(timeout=timeout)
 
     async def run(
         self,
-        input: str,
+        input: RunInput,
         params: Optional[Mapping[str, Any]] = None,
+        conversation_id: Optional[str] = None,
+        idempotency_key: Optional[str] = None,
     ) -> AsyncIterator[PlumrEvent]:
-        body: dict[str, Any] = {"input": input}
-        if params:
-            body["params"] = dict(params)
+        body = _build_body(input, params, conversation_id)
         async with self._client.stream(
             "POST",
             f"{self.base_url}/api/v1/run",
             json=body,
-            headers={"Content-Type": "application/json"},
+            headers=_build_headers(self.api_key, idempotency_key),
         ) as resp:
             if resp.status_code >= 400:
                 text = await resp.aread()
@@ -167,11 +203,18 @@ class AsyncPlumr:
 
     async def run_once(
         self,
-        input: str,
+        input: RunInput,
         params: Optional[Mapping[str, Any]] = None,
+        conversation_id: Optional[str] = None,
+        idempotency_key: Optional[str] = None,
     ) -> RunOnceResult:
         last: Optional[RunEndEvent] = None
-        async for event in self.run(input=input, params=params):
+        async for event in self.run(
+            input=input,
+            params=params,
+            conversation_id=conversation_id,
+            idempotency_key=idempotency_key,
+        ):
             if isinstance(event, RunEndEvent):
                 last = event
         if last is None:
@@ -182,6 +225,7 @@ class AsyncPlumr:
             output=last.output,
             error=last.error,
             durationMs=last.durationMs,
+            conversationId=last.conversationId,
         )
 
     async def aclose(self) -> None:
